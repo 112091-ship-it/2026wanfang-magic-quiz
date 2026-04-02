@@ -88,7 +88,7 @@
         }
 
         .hidden-screen { display: none !important; }
-.hidden { display: none !important; }
+        .hidden { display: none !important; }
 
         .animate-fade-in {
             animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -674,7 +674,7 @@ const resultsData = {
 };
 
 // ══ 狀態 ══
-let state = { userName: "", currentIndex: 0, answers: [] };
+let state = { userName: "", currentIndex: 0, answers: [], resultTitle: "" };
 
 // ══ 飄浮粒子特效 ══
 (function initParticles() {
@@ -840,6 +840,7 @@ function processResult() {
 
     setTimeout(() => {
         const res = resultsData[winType];
+        state.resultTitle = res.title; // 關鍵：把標題存起來
         document.getElementById('result-title').textContent = res.title;
 
         const imgEl = document.getElementById('result-image');
@@ -878,18 +879,33 @@ function showToast(msg) {
 }
 
 // ══ 分享 ══
-function shareResult() {
-    const text = `我在萬芳城解鎖了我的超能模式！你也快來吧！`;
+async function shareResult() {
+    const quizUrl = "https://112091-ship-it.github.io/2026wanfang-magic-quiz/";
+    const shareText = `我是 ${state.userName}，我在萬芳城解鎖了超能身份：${state.resultTitle}！快來測測你的超能開關吧！`;
+    
     if (navigator.share) {
-        navigator.share({ title: '萬芳城超能開關測驗', text, url: window.location.href });
+        try {
+            await navigator.share({
+                title: '2026 萬芳城｜超能開關測驗',
+                text: shareText,
+                url: quizUrl
+            });
+        } catch (err) {
+            console.log("User cancelled share");
+        }
     } else {
-        const d = document.createElement('input');
-        document.body.appendChild(d);
-        d.value = `${text} ${window.location.href}`;
-        d.select();
-        document.execCommand('copy');
-        document.body.removeChild(d);
-        showToast("✦ 分享連結已複製到剪貼簿");
+        try {
+            await navigator.clipboard.writeText(`${shareText}\n${quizUrl}`);
+            showToast("✦ 分享連結已複製到剪貼簿");
+        } catch (err) {
+            const d = document.createElement('input');
+            document.body.appendChild(d);
+            d.value = `${shareText} ${quizUrl}`;
+            d.select();
+            document.execCommand('copy');
+            document.body.removeChild(d);
+            showToast("✦ 分享連結已複製到剪貼簿");
+        }
     }
 }
 
